@@ -66,7 +66,7 @@ namespace Microsoft.AspNetCore.SignalR.Common.Tests.Internal.Protocol
                 && string.Equals(x.InvocationId, y.InvocationId, StringComparison.Ordinal)
                 && string.Equals(x.Target, y.Target, StringComparison.Ordinal)
                 && ArgumentListsEqual(x.Arguments, y.Arguments)
-                && StringArrayEqual(x.Streams, y.Streams);
+                && StringArrayEqual(x.StreamIds, y.StreamIds);
         }
 
         private bool StreamInvocationMessagesEqual(StreamInvocationMessage x, StreamInvocationMessage y)
@@ -75,7 +75,7 @@ namespace Microsoft.AspNetCore.SignalR.Common.Tests.Internal.Protocol
                 && string.Equals(x.InvocationId, y.InvocationId, StringComparison.Ordinal)
                 && string.Equals(x.Target, y.Target, StringComparison.Ordinal)
                 && ArgumentListsEqual(x.Arguments, y.Arguments)
-                && StringArrayEqual(x.Streams, y.Streams);
+                && StringArrayEqual(x.StreamIds, y.StreamIds);
         }
 
         private bool ArgumentListsEqual(object[] left, object[] right)
@@ -146,14 +146,11 @@ namespace Microsoft.AspNetCore.SignalR.Common.Tests.Internal.Protocol
                 return false;
             }
 
-            foreach (var item in left)
+            for (var i = 0; i < left.Length; i++)
             {
-                foreach (var item2 in right)
+                if (!string.Equals(left[i], right[i]))
                 {
-                    if (item != item2)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 

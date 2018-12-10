@@ -41,9 +41,15 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                 {
                     HasSyntheticArguments = true;
                     return false;
-                } else if (ReflectionHelper.IsStreamingType(p.ParameterType, mustBeDirectType: true))
+                }
+                else if (ReflectionHelper.IsStreamingType(p.ParameterType, mustBeDirectType: true))
                 {
-                    HasStreamingParameters = true;
+                    if (StreamingParameters == null)
+                    {
+                        StreamingParameters = new List<Type>();
+                    }
+
+                    StreamingParameters.Add(p.ParameterType.GetGenericArguments()[0]);
                     HasSyntheticArguments = true;
                     return false;
                 }
@@ -58,7 +64,7 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             Policies = policies.ToArray();
         }
 
-        public bool HasStreamingParameters { get; private set; }
+        public List<Type> StreamingParameters { get; private set; }
 
         private Func<object, CancellationToken, IAsyncEnumerator<object>> _convertToEnumerator;
 

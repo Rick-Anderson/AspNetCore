@@ -174,7 +174,7 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             }
             else
             {
-                bool isStreamCall = descriptor.HasStreamingParameters;
+                bool isStreamCall = descriptor.StreamingParameters != null;
                 return Invoke(descriptor, connection, hubMethodInvocationMessage, isStreamResponse, isStreamCall);
             }
         }
@@ -208,6 +208,13 @@ namespace Microsoft.AspNetCore.SignalR.Internal
 
                 try
                 {
+                    var clientStreamLength = hubMethodInvocationMessage.StreamIds?.Length ?? 0;
+                    var serverStreamLength = descriptor.StreamingParameters?.Count ?? 0;
+                    if (clientStreamLength != serverStreamLength)
+                    {
+                        throw new HubException($"Client sent {clientStreamLength} stream(s), Hub method expects {serverStreamLength}.");
+                    }
+
                     InitializeHub(hub, connection);
                     Task invocation = null;
 
@@ -236,11 +243,11 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                                     cts = CancellationTokenSource.CreateLinkedTokenSource(connection.ConnectionAborted);
                                     arguments[parameterPointer] = cts.Token;
                                 }
-                                else if (ReflectionHelper.IsStreamingType(descriptor.OriginalParameterTypes[parameterPointer], mustBeDirectType: true))
+                                else if (isStreamCall && ReflectionHelper.IsStreamingType(descriptor.OriginalParameterTypes[parameterPointer], mustBeDirectType: true))
                                 {
-                                    Log.StartingParameterStream(_logger, hubMethodInvocationMessage.Streams[streamPointer]);
-                                    var itemType = descriptor.OriginalParameterTypes[parameterPointer].GetGenericArguments()[0];
-                                    arguments[parameterPointer] = connection.StreamTracker.AddStream(hubMethodInvocationMessage.Streams[streamPointer], itemType);
+                                    Log.StartingParameterStream(_logger, hubMethodInvocationMessage.StreamIds[streamPointer]);
+                                    var itemType = descriptor.StreamingParameters[streamPointer];
+                                    arguments[parameterPointer] = connection.StreamTracker.AddStream(hubMethodInvocationMessage.StreamIds[streamPointer], itemType);
                                     streamPointer++;
                                 }
                                 else
@@ -290,6 +297,25 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                                 await SendInvocationError(hubMethodInvocationMessage.InvocationId, connection,
                                     ErrorMessageHelper.BuildErrorMessage($"An unexpected error occurred invoking '{hubMethodInvocationMessage.Target}' on the server.", ex, _enableDetailedErrors));
                                 return;
+                            }
+                            finally
+                            {
+                                // Stream response handles cleanup in StreamResultsAsync
+                                // And normal invocations handle cleanup below in the finally
+                                if (isStreamCall)
+                                {
+                                    hubActivator?.Release(hub);
+                                    scope.Dispose();
+                                    foreach (var stream in hubMethodInvocationMessage.StreamIds)
+                                    {
+                                        try
+                                        {
+                                            connection.StreamTracker.Complete(CompletionMessage.Empty(stream));
+                                        }
+                                        // ignore failures, it means the client already completed the streams
+                                        catch { }
+                                    }
+                                }
                             }
 
                             await connection.WriteAsync(CompletionMessage.WithResult(hubMethodInvocationMessage.InvocationId, result));

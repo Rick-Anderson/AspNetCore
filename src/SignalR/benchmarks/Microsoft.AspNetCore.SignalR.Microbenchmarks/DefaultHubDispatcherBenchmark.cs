@@ -38,8 +38,8 @@ namespace Microsoft.AspNetCore.SignalR.Microbenchmarks
             _dispatcher = new DefaultHubDispatcher<TestHub>(
                 serviceScopeFactory,
                 new HubContext<TestHub>(new DefaultHubLifetimeManager<TestHub>(NullLogger<DefaultHubLifetimeManager<TestHub>>.Instance)),
-                Options.Create(new HubOptions<TestHub>()),
-                Options.Create(new HubOptions()),
+                Options.Create(new HubOptions<TestHub>() { EnableDetailedErrors = true }),
+                Options.Create(new HubOptions() { EnableDetailedErrors = true }),
                 new Logger<DefaultHubDispatcher<TestHub>>(NullLoggerFactory.Instance));
 
             var pair = DuplexPipe.CreateConnectionPair(PipeOptions.Default, PipeOptions.Default);
@@ -163,61 +163,71 @@ namespace Microsoft.AspNetCore.SignalR.Microbenchmarks
 
                 return channel.Reader;
             }
+
+            public async Task UploadStream(ChannelReader<string> channelReader)
+            {
+                while (await channelReader.WaitToReadAsync())
+                {
+                    while (channelReader.TryRead(out var item))
+                    {
+                    }
+                }
+            }
         }
 
-        [Benchmark]
-        public Task Invocation()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "Invocation", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task Invocation()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "Invocation", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task InvocationAsync()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationAsync", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task InvocationAsync()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationAsync", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task InvocationReturnValue()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationReturnValue", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task InvocationReturnValue()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationReturnValue", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task InvocationReturnAsync()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationReturnAsync", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task InvocationReturnAsync()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationReturnAsync", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task InvocationValueTaskAsync()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationValueTaskAsync", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task InvocationValueTaskAsync()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", "InvocationValueTaskAsync", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task StreamChannelReader()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReader", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task StreamChannelReader()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReader", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task StreamChannelReaderAsync()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderAsync", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task StreamChannelReaderAsync()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderAsync", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task StreamChannelReaderValueTaskAsync()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderValueTaskAsync", Array.Empty<object>()));
-        }
+        //[Benchmark]
+        //public Task StreamChannelReaderValueTaskAsync()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderValueTaskAsync", Array.Empty<object>()));
+        //}
 
-        [Benchmark]
-        public Task StreamChannelReaderCount_Zero()
-        {
-            return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderCount", new object[] { 0 }));
-        }
+        //[Benchmark]
+        //public Task StreamChannelReaderCount_Zero()
+        //{
+        //    return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderCount", new object[] { 0 }));
+        //}
 
         [Benchmark]
         public Task StreamChannelReaderCount_One()
@@ -230,5 +240,24 @@ namespace Microsoft.AspNetCore.SignalR.Microbenchmarks
         {
             return _dispatcher.DispatchMessageAsync(_connectionContext, new StreamInvocationMessage("123", "StreamChannelReaderCount", new object[] { 1000 }));
         }
+
+        //[Benchmark]
+        //public async Task UploadStream_One()
+        //{
+        //    await _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", nameof(TestHub.UploadStream), Array.Empty<object>(), streamIds: new string[] { "1" }));
+        //    await _dispatcher.DispatchMessageAsync(_connectionContext, new StreamItemMessage("1", "test"));
+        //    //await _dispatcher.DispatchMessageAsync(_connectionContext, CompletionMessage.Empty("1"));
+        //}
+
+        //[Benchmark]
+        //public async Task UploadStream_Thousand()
+        //{
+        //    await _dispatcher.DispatchMessageAsync(_connectionContext, new InvocationMessage("123", nameof(TestHub.UploadStream), Array.Empty<object>(), streamIds: new string[] { "1" }));
+        //    for (var i = 0; i < 1000; ++i)
+        //    {
+        //        await _dispatcher.DispatchMessageAsync(_connectionContext, new StreamItemMessage("1", "test"));
+        //    }
+        //    //await _dispatcher.DispatchMessageAsync(_connectionContext, CompletionMessage.Empty("1"));
+        //}
     }
 }

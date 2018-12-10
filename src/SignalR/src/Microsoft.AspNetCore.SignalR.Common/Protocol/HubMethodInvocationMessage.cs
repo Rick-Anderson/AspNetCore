@@ -21,7 +21,10 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         /// </summary>
         public object[] Arguments { get; }
 
-        public string[] Streams { get; }
+        /// <summary>
+        /// The target methods stream IDs.
+        /// </summary>
+        public string[] StreamIds { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HubMethodInvocationMessage"/> class.
@@ -29,11 +32,11 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         /// <param name="invocationId">The invocation ID.</param>
         /// <param name="target">The target method name.</param>
         /// <param name="arguments">The target method arguments.</param>
-        /// <param name="streams">The target methods stream IDs.</param>
-        protected HubMethodInvocationMessage(string invocationId, string target, object[] arguments, string[] streams)
+        /// <param name="streamIds">The target methods stream IDs.</param>
+        protected HubMethodInvocationMessage(string invocationId, string target, object[] arguments, string[] streamIds)
             : this(invocationId, target, arguments)
         {
-            Streams = streams;
+            StreamIds = streamIds;
         }
 
         /// <summary>
@@ -47,7 +50,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         {
             if (string.IsNullOrEmpty(target))
             {
-                throw new ArgumentNullException(nameof(target));
+                throw new ArgumentException(nameof(target));
             }
 
             Target = target;
@@ -87,9 +90,9 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         /// <param name="invocationId">The invocation ID.</param>
         /// <param name="target">The target method name.</param>
         /// <param name="arguments">The target method arguments.</param>
-        /// <param name="streams">The target methods stream IDs.</param>
-        public InvocationMessage(string invocationId, string target, object[] arguments, string[] streams)
-            : base(invocationId, target, arguments, streams)
+        /// <param name="streamIds">The target methods stream IDs.</param>
+        public InvocationMessage(string invocationId, string target, object[] arguments, string[] streamIds)
+            : base(invocationId, target, arguments, streamIds)
         {
         }
 
@@ -97,6 +100,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         public override string ToString()
         {
             string args;
+            string streamIds;
             try
             {
                 args = string.Join(", ", Arguments?.Select(a => a?.ToString()));
@@ -105,7 +109,17 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
             {
                 args = $"Error: {ex.Message}";
             }
-            return $"InvocationMessage {{ {nameof(InvocationId)}: \"{InvocationId}\", {nameof(Target)}: \"{Target}\", {nameof(Arguments)}: [ {args} ] }}";
+
+            try
+            {
+                streamIds = string.Join(", ", StreamIds != null ? StreamIds.Select(id => id?.ToString()) : Array.Empty<string>());
+            }
+            catch (Exception ex)
+            {
+                streamIds = $"Error: {ex.Message}";
+            }
+
+            return $"InvocationMessage {{ {nameof(InvocationId)}: \"{InvocationId}\", {nameof(Target)}: \"{Target}\", {nameof(Arguments)}: [ {args} ], {nameof(StreamIds)}: [ {streamIds} ] }}";
         }
     }
 
@@ -123,10 +137,6 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         public StreamInvocationMessage(string invocationId, string target, object[] arguments)
             : base(invocationId, target, arguments)
         {
-            if (string.IsNullOrEmpty(invocationId))
-            {
-                throw new ArgumentNullException(nameof(invocationId));
-            }
         }
 
         /// <summary>
@@ -135,20 +145,17 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         /// <param name="invocationId">The invocation ID.</param>
         /// <param name="target">The target method name.</param>
         /// <param name="arguments">The target method arguments.</param>
-        /// <param name="streams">The target methods stream IDs.</param>
-        public StreamInvocationMessage(string invocationId, string target, object[] arguments, string[] streams)
-            : base(invocationId, target, arguments, streams)
+        /// <param name="streamIds">The target methods stream IDs.</param>
+        public StreamInvocationMessage(string invocationId, string target, object[] arguments, string[] streamIds)
+            : base(invocationId, target, arguments, streamIds)
         {
-            if (string.IsNullOrEmpty(invocationId))
-            {
-                throw new ArgumentNullException(nameof(invocationId));
-            }
         }
 
         /// <inheritdoc />
         public override string ToString()
         {
             string args;
+            string streamIds;
             try
             {
                 args = string.Join(", ", Arguments?.Select(a => a?.ToString()));
@@ -157,7 +164,17 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
             {
                 args = $"Error: {ex.Message}";
             }
-            return $"StreamInvocation {{ {nameof(InvocationId)}: \"{InvocationId}\", {nameof(Target)}: \"{Target}\", {nameof(Arguments)}: [ {args} ] }}";
+
+            try
+            {
+                streamIds = string.Join(", ", StreamIds != null ? StreamIds.Select(id => id?.ToString()) : Array.Empty<string>());
+            }
+            catch (Exception ex)
+            {
+                streamIds = $"Error: {ex.Message}";
+            }
+
+            return $"StreamInvocation {{ {nameof(InvocationId)}: \"{InvocationId}\", {nameof(Target)}: \"{Target}\", {nameof(Arguments)}: [ {args} ], {nameof(StreamIds)}: [ {streamIds} ] }}";
         }
     }
 }

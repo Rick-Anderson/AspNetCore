@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
         private static readonly string ProtocolName = "messagepack";
         private static readonly int ProtocolVersion = 1;
         private static readonly int ProtocolMinorVersion = 0;
-        
+
         /// <inheritdoc />
         public string Name => ProtocolName;
 
@@ -286,19 +286,20 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
 
         private static string[] ReadStreamIds(byte[] input, ref int offset)
         {
-            var streamIdLength = ReadArrayLength(input, ref offset, "streams");
-            string[] streams = null;
-            if (streamIdLength > 0)
+            var streamIdCount = ReadArrayLength(input, ref offset, "streamIds");
+            List<string> streams = null;
+
+            if (streamIdCount > 0)
             {
-                streams = new string[streamIdLength];
-                for (var i = 0; i < streamIdLength; i++)
+                streams = new List<string>();
+                for (var i = 0; i < streamIdCount; i++)
                 {
-                    streams[i] = MessagePackBinary.ReadString(input, offset, out var read);
+                    streams.Add(MessagePackBinary.ReadString(input, offset, out var read));
                     offset += read;
                 }
             }
 
-            return streams;
+            return streams?.ToArray();
         }
 
         private static object[] BindArguments(byte[] input, ref int offset, IReadOnlyList<Type> parameterTypes, IFormatterResolver resolver)
@@ -418,14 +419,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
 
         private void WriteInvocationMessage(InvocationMessage message, Stream packer)
         {
-            if (message.Streams != null)
-            {
-                MessagePackBinary.WriteArrayHeader(packer, 6);
-            }
-            else
-            {
-                MessagePackBinary.WriteArrayHeader(packer, 5);
-            }
+            MessagePackBinary.WriteArrayHeader(packer, 6);
 
             MessagePackBinary.WriteInt32(packer, HubProtocolConstants.InvocationMessageType);
             PackHeaders(packer, message.Headers);
@@ -444,19 +438,12 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
                 WriteArgument(arg, packer);
             }
 
-            WriteStreamIds(message.Streams, packer);
+            WriteStreamIds(message.StreamIds, packer);
         }
 
         private void WriteStreamInvocationMessage(StreamInvocationMessage message, Stream packer)
         {
-            if (message.Streams != null)
-            {
-                MessagePackBinary.WriteArrayHeader(packer, 6);
-            }
-            else
-            {
-                MessagePackBinary.WriteArrayHeader(packer, 5);
-            }
+            MessagePackBinary.WriteArrayHeader(packer, 6);
 
             MessagePackBinary.WriteInt16(packer, HubProtocolConstants.StreamInvocationMessageType);
             PackHeaders(packer, message.Headers);
@@ -469,7 +456,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
                 WriteArgument(arg, packer);
             }
 
-            WriteStreamIds(message.Streams, packer);
+            WriteStreamIds(message.StreamIds, packer);
         }
 
         private void WriteStreamingItemMessage(StreamItemMessage message, Stream packer)
@@ -493,15 +480,19 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
             }
         }
 
-        private void WriteStreamIds(string[] streams, Stream packer)
+        private void WriteStreamIds(string[] streamIds, Stream packer)
         {
-            if (streams != null)
+            if (streamIds != null)
             {
-                MessagePackBinary.WriteArrayHeader(packer, streams.Length);
-                foreach (var streamId in streams)
+                MessagePackBinary.WriteArrayHeader(packer, streamIds.Length);
+                foreach (var streamId in streamIds)
                 {
                     MessagePackBinary.WriteString(packer, streamId);
                 }
+            }
+            else
+            {
+                MessagePackBinary.WriteArrayHeader(packer, 0);
             }
         }
 

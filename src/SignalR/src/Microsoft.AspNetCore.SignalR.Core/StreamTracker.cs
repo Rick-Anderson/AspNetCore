@@ -43,7 +43,7 @@ namespace Microsoft.AspNetCore.SignalR
         {
             return TryGetConverter(message.InvocationId).WriteToStream(message.Item);
         }
-        
+
         public Type GetStreamItemType(string streamId)
         {
             return TryGetConverter(streamId).GetItemType();
