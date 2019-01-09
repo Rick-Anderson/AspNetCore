@@ -33,10 +33,6 @@
     <BuildNodeJS>true</BuildNodeJS>
   </PropertyGroup>
 
-  <ItemGroup>
-    <SharedSourceDirectories Include="$(SharedSourcesFolder)Hosting.WebHostBuilderFactory\" />
-  </ItemGroup>
-
   <!-- These projects are always excluded, even when -projects is specified on command line. -->
   <ItemGroup>
     <!-- These projects use 'legacy' csproj, which is not supported by dotnet-msbuild. -->
