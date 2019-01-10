@@ -81,10 +81,6 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <SamplesProject Include="$(RepositoryRoot)src\**\samples\**\*.csproj;"/>
-
-        <ProjectToExclude Include="@(SamplesProject)" Condition="'$(BuildSamples)' == 'false' "/>
-
         <ProjectToBuild Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' " Include="$(RepositoryRoot)src\Servers\**\*.vcxproj">
           <!-- Required to prevent triggering double-builds. See eng\targets\ResolveIisReferences.targets for details. -->
           <AdditionalProperties Condition="'$(SharedFxRid)' == 'win-x64'">Platform=x64</AdditionalProperties>
