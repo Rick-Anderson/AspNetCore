@@ -224,7 +224,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             var newPathSegments = routePattern.PathSegments.ToList();
             var hasLinkGenerationEndpoint = false;
             var nonParameterPolicyValues = routePattern.ParameterPolicies
-                .Where(p => routePattern.GetParameter(p.Key ?? string.Empty) == null)
+                .Where(p => routePattern.GetParameter(p.Key ?? string.Empty) == null && p.Value.Count > 0 && p.Value.First().ParameterPolicy != null) // Only GetParameter is required. Extra is for safety
                 .Select(p => new KeyValuePair<string, object>(p.Key, p.Value.First().ParameterPolicy)) // Can only pass a single non-parameter to RouteParameter
                 .ToArray();
             var nonParameterPolicies = RouteValueDictionary.FromArray(nonParameterPolicyValues);
