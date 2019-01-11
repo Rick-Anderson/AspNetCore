@@ -44,6 +44,4 @@
     <Repository Include="AuthSamples" RootPath="$(RepositoryRoot)src\AuthSamples\" PatchPolicy="AlwaysUpdateAndCascadeVersions" />
   </ItemGroup>
 
-  <ItemGroup>
-  </ItemGroup>
 </Project>
